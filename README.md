@@ -17,10 +17,10 @@ to subclass the given class and implement the AI.
 1. There is a 4 by 4 matrix in the form of a 2d list/array with the
     following indices containing an arbitrary value of zeros.
 
-    [ [(0,0), (0,1), (0,2), (0,3)],
-      [(1,0), (1,1), (1,2), (1,3)],
-      [(2,0), (2,1), (2,2), (2,3)],
-      [(3,0), (3,1), (3,2), (3,3)] ]
+    [ [(0,0), (0,1), (0,2), (0,3)],  
+      [(1,0), (1,1), (1,2), (1,3)],   
+      [(2,0), (2,1), (2,2), (2,3)],  
+      [(3,0), (3,1), (3,2), (3,3)] ]  
 
 2. Two players are required to play.
 3. Each player is a program written in any language.
@@ -37,7 +37,7 @@ to subclass the given class and implement the AI.
 
 1. Player 1 and 2 connects to server 'localhost' at port 8000.
 2. Player 1 goes first and alternates with player 2.
-3. The server sends a flag and the currently drawn lines as a string
+3. The server sends a flag and the currently drawn lines as a string  
    (to the player to start its turn)
 4. Player's AI determines the best line to draw next and sends this
     coordinate to the server.
