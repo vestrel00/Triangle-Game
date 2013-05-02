@@ -184,11 +184,30 @@ class TriangleBoard(object):
                     return True
 
         return False
+
+class TriangleGUIManager(Thread):
+    """ Handles communication with the GUI module """
+    
+    def __init__(self, server, sock):
+        super(TriangleGUIManager, self).__init__()
+        self.server = server
+        self.sock = sock
+
+    def update(self):
+        """ 
+        Sends a flag to the GUI module to update its screen
+        with the drawn lines
+        """
+        pass # TODO
+
+    def run(self):
+        pass # TODO
                 
 
 class TriangleServer(Thread):
     """
-    Accepts 2 connections.
+    Accepts 3 connections.
+    The first connection must be the GUI.
     For each connection that is accepted, a new thread is launched
 
     Once both clients have connected, the game begins.
@@ -204,18 +223,23 @@ class TriangleServer(Thread):
 
         self.services = {}
         self.triangle = TriangleBoard()
+        self.gui = None
 
     def run(self):
         servs = self.services
         tri = self.triangle
 
-        while len(servs) < 2:
-            sock = self.server_socket.accept()
+        print "Connect the GUI module."
+        self.gui = TriangleGUIManager(self,
+                                self.server_socket.accept()[0])
+
+        print "Connect player 1 and 2."
+        while len(servs) < 3:
+            sock = self.server_socket.accept()[0]
             service = TriangleServerService(tri, sock, len(servs)+1)
             servs[service.sid] = service
             
-        print "Both players have connected - game is starting..."
-        
+        print "All set. Let the game begin."
         # Player 1 starts first
         turn = 1
         while tri.is_ongoing():
@@ -249,7 +273,7 @@ class TriangleServerService(object):
     def __init__(self, triangle, sock, sid):
         super(TriangleServerService, self).__init__()
         self.tri = triangle
-        self.sock = sock[0]
+        self.sock = sock
         self.sid = sid
         self.score = 0
 
