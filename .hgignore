@@ -1,0 +1,21 @@
+syntax: glob
+
+bin/
+libs/
+assets/
+gen/
+war/
+gwt-unitCache/
+.meta/
+.metadata/
+.settings/
+.gwt/
+
+**.log
+**.class
+**.classpath
+**.project
+**.pyc
+**.pyo
+**.orig
+**~
