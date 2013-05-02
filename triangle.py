@@ -1,7 +1,10 @@
+#!/usr/bin/env python
+# -*- coding: utf-8 -*- 
+
 """
 The server for interfacing between two triangle programs.
 
-Homework for AI 2013 - Lucci
+Homework for AI 2013
 Written by Vandolf Estrelado
 """
 
@@ -46,7 +49,7 @@ class TriangleBoard(object):
             - this attempts to create a line in the matrix.
 
         The result is a string containing the status character 
-        followed by the all the lines accumulated so far.
+        followed by the all the lines drawn so far.
             - the status character is either 0 or 1
                 0 if failed (because of overlapping lines or 
                 non-existing points or line is invalid)
@@ -257,12 +260,13 @@ class TriangleServerService(object):
         """ 
         Receive input from the client and send back the result.
 
-        First, send the start flag 1 to the client.
+        First, send the start flag 1 to the client and all the 
+        lines drawn so far.
 
         Then, see TriangleBoard.add_line doc string.
         """
         while True:
-            self.sock.send('1')
+            self.sock.send('1'+self.tri.join_lines())
             line = self.sock.recv(4)    
             result = self.tri.add_line(self, line)
             self.sock.send(result+self.tri.join_lines())
