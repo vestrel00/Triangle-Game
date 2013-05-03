@@ -1,8 +1,8 @@
 package com.vestrel00.triangle;
 
-import java.io.DataInputStream;
-import java.io.DataOutputStream;
+import java.io.BufferedReader;
 import java.io.IOException;
+import java.io.InputStreamReader;
 import java.net.Socket;
 import java.util.ArrayList;
 import java.util.List;
@@ -62,7 +62,7 @@ public class Triangle implements ApplicationListener {
 
 		listener = new ServerListener();
 		listenerThread = new Thread(listener);
-		listenerThread.run();
+		listenerThread.start();
 
 	}
 
@@ -165,10 +165,10 @@ public class Triangle implements ApplicationListener {
 
 		public Line(Color color, int x1, int y1, int x2, int y2) {
 			this.color = color;
-			this.x1 = x1*DIST_MULTIPLIER;
-			this.y1 = y1*DIST_MULTIPLIER;
-			this.x2 = x2*DIST_MULTIPLIER;
-			this.y2 = y2*DIST_MULTIPLIER;
+			this.x1 = x1 * DIST_MULTIPLIER;
+			this.y1 = y1 * DIST_MULTIPLIER;
+			this.x2 = x2 * DIST_MULTIPLIER;
+			this.y2 = y2 * DIST_MULTIPLIER;
 		}
 
 		public void draw(ShapeRenderer shape) {
@@ -179,14 +179,14 @@ public class Triangle implements ApplicationListener {
 	private class ServerListener implements Runnable, Disposable {
 
 		private Socket socket;
-		private DataOutputStream out;
-		private DataInputStream in;
+		private BufferedReader in;
+		private boolean isRunning = true;
 
 		public ServerListener() {
 			try {
 				socket = new Socket("localhost", 8000);
-				in = new DataInputStream(socket.getInputStream());
-				out = new DataOutputStream(socket.getOutputStream());
+				in = new BufferedReader(new InputStreamReader(
+						socket.getInputStream()));
 			} catch (IOException e) {
 				e.printStackTrace();
 			}
@@ -194,12 +194,25 @@ public class Triangle implements ApplicationListener {
 
 		@Override
 		public void run() {
-			// TODO Auto-generated method stub
-
+			while (isRunning) {
+				try {
+					// see TriangleGUIManager.sendAddLineResult in triangle.py
+					// for the data format
+					String data;
+					if ((data = in.readLine()) == null)
+						break;
+					System.out.println(data);
+					// TODO parse the data and update the game variables and
+					// re-draw
+				} catch (IOException e) {
+					e.printStackTrace();
+				}
+			}
 		}
 
 		@Override
 		public void dispose() {
+			isRunning = false;
 			try {
 				socket.close();
 			} catch (IOException e) {

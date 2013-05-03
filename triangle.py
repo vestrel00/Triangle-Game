@@ -24,7 +24,8 @@ class TriangleBoard(object):
 
     """
     
-    def __init__(self):
+    def __init__(self, server):
+        self.server = server
         self.matrix = [ [0 for i in range(4)] for i in range(4) ]
         self.lines = []
         self.is_ongoing = True
@@ -114,6 +115,8 @@ class TriangleBoard(object):
             return '2'
         else:
             return '1'        
+        
+        self.server.gui.sendAddLineResult(service, line)
 
     def is_valid(self, line):
         """ 
@@ -185,24 +188,26 @@ class TriangleBoard(object):
 
         return False
 
-class TriangleGUIManager(Thread):
-    """ Handles communication with the GUI module """
+class TriangleGUIManager(object):
+    """ Handles communication with the GUI module written in JAVA """
     
     def __init__(self, server, sock):
-        super(TriangleGUIManager, self).__init__()
         self.server = server
         self.sock = sock
 
-    def update(self):
+    def sendAddLineResult(self, service, line):
         """ 
-        Sends a flag to the GUI module to update its screen
-        with the drawn lines
+        sends player service id and score that drew the line 
+        and the line itself
+        Notes:
+            1. sendall does not block like recv does so sending 
+                in the same thread as main will not block the game!
+            2. need to append '\n' to strings being sent to Java code.
+               In the Java gui source, BufferedReader.readLine is used
+        
         """
-        pass # TODO
-
-    def run(self):
-        pass # TODO
-                
+        self.sock.sendall(str(service.sid)+\
+                        str(service.score)+line+'\n')
 
 class TriangleServer(Thread):
     """
@@ -222,7 +227,7 @@ class TriangleServer(Thread):
         self.server_socket.listen(2)
 
         self.services = {}
-        self.triangle = TriangleBoard()
+        self.triangle = TriangleBoard(self)
         self.gui = None
 
     def run(self):
@@ -282,18 +287,18 @@ class TriangleServerService(object):
 
     def start_turn(self):
         """ 
-        Receive input from the client and send back the result.
+        Receive input from the client and sendall back the result.
 
-        First, send the start flag 1 to the client and all the 
+        First, sendall the start flag 1 to the client and all the 
         lines drawn so far.
 
         Then, see TriangleBoard.add_line doc string.
         """
         while True:
-            self.sock.send('1'+self.tri.join_lines())
+            self.sock.sendall('1'+self.tri.join_lines())
             line = self.sock.recv(4)    
             result = self.tri.add_line(self, line)
-            self.sock.send(result+self.tri.join_lines())
+            self.sock.sendall(result+self.tri.join_lines())
             if result is 1: break
 
     def end(self, wsid):
@@ -303,7 +308,7 @@ class TriangleServerService(object):
         """
         if wsid == self.sid: status = '1'
         else: status = '0'
-        self.sock.send('0'+status)
+        self.sock.sendall('0'+status)
         self.sock.close()
             
 
