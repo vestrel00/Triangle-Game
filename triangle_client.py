@@ -8,7 +8,7 @@ Homework for AI 2013
 Written by Vandolf Estrelado
 """
 
-import socket
+import socket, sys
 from triangle import line_overlaps, line_is_valid
 
 # IMPORTANT! Server must have the same values!
@@ -40,7 +40,7 @@ class TriangleClient(object):
 
         self.is_playing = False
         self.sock.close()
-        return status
+        sys.exit(0)
         
     def play(self):
         """
@@ -69,7 +69,7 @@ class TriangleClient(object):
             # Step 2
             flag = data[0]
             if flag == END:
-                return self.end(data[1])
+                self.end(data[1])
             else:
                 # convert lines to a list of lists
                 lines_str = data[1:]

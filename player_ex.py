@@ -1,3 +1,6 @@
+#!/usr/bin/env python
+# -*- coding: utf-8 -*- 
+
 """
 An example triangle AI.
 This AI simply picks a random line from all the posible set of lines.

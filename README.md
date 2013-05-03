@@ -12,6 +12,18 @@ The client may be written in C/C++, Java, or Python.
 The base code for each language is provided with methods needed to parse server and game data. Therefore, students will simply need
 to subclass the given class and implement the AI.
 
+# Try out the example 'dumb' AI's provided!
+
+* player_ex.py
+
+    1. ```python triangle.py```
+    2. open another shell/terminal
+    3. ```java -jar gui.jar```
+    4. open another shell/terminal
+    5. ```python player_ex.py```
+    6. open another shell/terminal
+    7. ```python player_ex.py```
+
 # The triangle game's mechanics
 
 1. There is a 4 by 4 matrix in the form of a 2d list/array with the
