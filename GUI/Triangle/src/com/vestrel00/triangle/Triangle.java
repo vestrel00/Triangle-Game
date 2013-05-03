@@ -19,6 +19,11 @@ import com.badlogic.gdx.graphics.glutils.ShapeRenderer.ShapeType;
 import com.badlogic.gdx.utils.Disposable;
 import com.badlogic.gdx.utils.StringBuilder;
 
+/**
+ * Front end for the triangle game.
+ * @author Vandolf Estrellado
+ *
+ */
 public class Triangle implements ApplicationListener {
 
 	private OrthographicCamera camera;
@@ -92,7 +97,7 @@ public class Triangle implements ApplicationListener {
 		font.draw(batch, player1.getScore(), camera.viewportWidth * -0.1f,
 				camera.viewportHeight * -0.1f);
 		font.setColor(player2.color);
-		font.draw(batch, player2.getScore(), camera.viewportWidth * 0.6f,
+		font.draw(batch, player2.getScore(), camera.viewportWidth * 0.4f,
 				camera.viewportHeight * -0.1f);
 		batch.end();
 	}
@@ -129,13 +134,13 @@ public class Triangle implements ApplicationListener {
 		public List<Line> lines;
 		public String name;
 		public Color color;
-		public int score;
+		public String score;
 
 		public Player(String name, Color color) {
 			this.name = name;
 			this.color = color;
 
-			score = 0;
+			score = "0";
 			lines = new ArrayList<Line>();
 			builder = new StringBuilder();
 		}
@@ -158,8 +163,18 @@ public class Triangle implements ApplicationListener {
 		}
 
 		public void update(String score, String line) {
-			this.score = Integer.valueOf(score);
+			this.score = score;
 			this.lines.add(new Line(line));
+			Gdx.graphics.requestRendering();
+		}
+
+		public void disqualify() {
+			this.score = "Disqualified";
+			Gdx.graphics.requestRendering();
+		}
+
+		public void end(String result, String score) {
+			this.score = result + COLON + score;
 			Gdx.graphics.requestRendering();
 		}
 
@@ -180,7 +195,6 @@ public class Triangle implements ApplicationListener {
 		}
 
 		public void draw(ShapeRenderer shape) {
-			System.out.println(x1 + ", " + y1 + ", " + x2 + ", " + y2);
 			shape.line(x1, y1, x2, y2);
 		}
 	}
@@ -205,17 +219,42 @@ public class Triangle implements ApplicationListener {
 		public void run() {
 			while (isRunning) {
 				try {
-					// see TriangleGUIManager.sendAddLineResult in triangle.py
+					// see TriangleGUIManager in triangle.py
 					// for the data format : playerId, playerScore, lineDrawn
 					String data;
 					String[] list = new String[3];
 					if ((data = in.readLine()) == null)
 						break;
 					list = data.split(",");
-					if (list[0].contentEquals("1"))
-						player1.update(list[1], list[2]);
-					else
-						player2.update(list[1], list[2]);
+
+					if (list[0].contentEquals("0")) { // invalid line
+						if (list[1].contentEquals("1"))
+							player1.disqualify();
+						else
+							player2.disqualify();
+
+						isRunning = false;
+						break;
+					} else if (list[0].contentEquals("1")) { // valid line
+						if (list[1].contentEquals("1"))
+							player1.update(list[2], list[3]);
+						else
+							player2.update(list[2], list[3]);
+					} else { // 4 end game
+						int p1Score = Integer.parseInt(list[1]);
+						int p2Score = Integer.parseInt(list[2]);
+						if (p1Score > p2Score) {
+							player1.end("win", String.valueOf(p1Score));
+							player2.end("lose", String.valueOf(p2Score));
+						} else if (p1Score < p2Score) {
+							player1.end("lose", String.valueOf(p1Score));
+							player2.end("win", String.valueOf(p2Score));
+						} else {
+							player1.end("tie", String.valueOf(p1Score));
+							player2.end("tie", String.valueOf(p2Score));
+						}
+
+					}
 				} catch (IOException e) {
 					e.printStackTrace();
 				}

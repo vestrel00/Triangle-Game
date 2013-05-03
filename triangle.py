@@ -9,8 +9,120 @@ Written by Vandolf Estrelado
 """
 
 from threading import Thread
-import socket
+import socket, sys, time
 
+# delays execution of each turn in seconds
+TURN_DELAY = 1
+
+# IMPORTANT! Clients must have the same values!
+# status codes/flags used to communicate with clients
+FAIL = '0'
+SUCCESS = '1'
+SUCCESS_NEW = '2'
+START = '3'
+END = '4'
+TIE = '5'
+
+# this only exist to detect IndexError s
+MATRIX = [ [0 for i in range(4)] for i in range(4) ]
+
+def line_is_valid(line):
+    """ 
+    Returns True if the line is a valid line.
+    Note that we can simply store all the possible lines
+    and check if line is in there but that does not help players
+    understand what the form of a valid line is.
+
+    A line is not valid if it contains an index 
+    outside the matrix or it's horzontal or vertical
+    length is greater than 1 or both are 0
+
+    IMPORTANT! As a convention of the game, lines should be    
+    written from left to right and from up to down
+    e.g. 
+    VALID 
+        vertical lines: '0010', '1121', ...
+        horizontal lines: '0001', '1112', ...
+        positive slope: '1001', '1203', ...
+        negative slope: '0011', '1223', ...
+        
+    INVALID 
+        vertical lines: '1000', '2111', ...
+        horizontal lines: '0100', '1211', ...
+        positive slope: '0110', '0312', ...
+        negative slope: '1100', '2312', ...
+    """
+    if type(line) is str:
+        l = [int(i) for i in list(line)]
+    else:
+        l = line
+
+    m = MATRIX
+    try:
+        m[l[0]][l[1]]
+        m[l[2]][l[3]]
+    except IndexError:
+        return False
+    else:
+        length  = abs(l[2]-l[0]) > 1 or abs(l[3]-l[1]) > 1
+        point = l[2]-l[0] == 0 and l[3]-l[1] == 0
+        vertical = l[1] == l[3] and l[2]-l[0] < 0
+        horizontal = l[0] == l[2] and l[3]-l[1] < 0
+        slope_pos = l[2]-l[0] > 0 and l[3]-l[1] < 0
+        slope_neg = l[2]-l[0] < 0 and l[3]-l[1] < 0
+        if length or point or vertical or horizontal or\
+            slope_pos or slope_neg:
+            return False 
+        else:
+            return True
+
+def line_overlaps(line, lines):
+    """ 
+    returns True if the given line overlaps another.
+    lines is a list of strings or ints: ['0010', ...] or [[0,0,1,0],]
+    line can be a str or a list of ints: '0010' or [0,0,1,0]
+
+    Usually, lines and line are both either composed of str or int!
+    """
+    if not lines: return False;
+
+    assert type(line) == type(lines[0]) and\
+            type(line[0]) == type(lines[0][0])
+
+    if type(line) is str:
+        if line in lines: return True
+        l = [int(i) for i in list(line)]
+    else:
+        if line in lines: return True
+        l = line
+
+    
+    # line is a positive slope /
+    # remember that row index grows downwards
+    if l[2]-l[0] < 0:
+        for lin in lines:
+            if type(lin) is str:
+                x = [int(i) for i in list(lin)]
+            else:
+                x = lin
+            # if x is a negative slope and line_overlaps
+            if x[2]-x[0] > 0:
+                if l[3] == x[3] and l[1] == x[1]:
+                    return True
+
+    # line is a negative slope \
+    elif l[2]-l[0] > 0:
+        for lin in lines:
+            if type(lin) is str:
+                x = [int(i) for i in list(lin)]
+            else:
+                x = lin
+            # if x is a positive slope and overlaps
+            if x[2]-x[0] < 0:
+                if l[3] == x[3] and l[1] == x[1]:
+                    return True
+
+    return False
 
 class TriangleBoard(object):
     """ 
@@ -22,22 +134,49 @@ class TriangleBoard(object):
       [(2,0), (2,1), (2,2), (2,3)],
       [(3,0), (3,1), (3,2), (3,3)] ]
 
+    There are 42 possible lines (some slopes overlap):
+    all_possible_valid_lines = [
+            # all horizontal lines
+            [0,0, 0,1], [0,1, 0,2], [0,2, 0,3], [1,0, 1,1],
+            [1,1, 1,2], [1,2, 1,3], [2,0, 2,1], [2,1, 2,2],
+            [2,2, 2,3], [3,0, 3,1], [3,1, 3,2], [3,2, 3,3],
+
+            # all vertical lines
+            [0,0, 1,0], [0,1, 1,1], [0,2, 1,2], [0,3, 1,3],
+            [1,0, 2,0], [1,1, 2,1], [1,2, 2,2], [1,3, 2,3],
+            [2,0, 3,0], [2,1, 3,1], [2,2, 3,2], [2,3, 3,3],
+
+            # all positive slopes
+            [1,0, 0,1], [1,1, 0,2], [1,2, 0,3], [2,0, 1,1],
+            [2,1, 1,2], [2,2, 1,3], [3,0, 2,1], [3,1, 2,2],
+            [3,2, 2,3], 
+
+            # all negative slopes
+            [0,0, 1,1], [0,1, 1,2], [0,2, 1,3], [1,0, 2,1],
+            [1,1, 2,2], [1,2, 2,3], [2,0, 3,1], [2,1, 3,2],
+            [2,2, 3,3],
+        ]
     """
     
     def __init__(self, server):
         self.server = server
-        self.matrix = [ [0 for i in range(4)] for i in range(4) ]
         self.lines = []
-        self.is_ongoing = True
+
+    def is_ongoing(self):
+        """ 
+        Check if all possible lines have been drawn.
+        I counted 33 - no duplicates or overlaps.
+        """
+        return len(self.lines) < 33
 
     def join_lines(self):
         """ 
-        return the lines as a joined string.
+        return the lines as a joined string separated by commas.
         e.g.
         ['0011', '0001'] 
-        returns '00110001'
+        returns '0011,0001,'
         """
-        return ''.join(self.lines)
+        return ','.join(self.lines)
 
     def ints_to_line(self, ints):
         """ return a list of ints and join them to a string """
@@ -59,8 +198,11 @@ class TriangleBoard(object):
                     * if this is the case, another turn is given to 
                         this player
         """
-        if not self.is_valid(line) or self.overlaps(line): 
-            return '0'
+        if not line_is_valid(line) or\
+            line_overlaps(line, self.lines): 
+            # New line is added - fail - update the gui
+            self.server.gui.sendAddLineResult(FAIL, service, line)
+            return FAIL
 
         # add the line
         self.lines.append(line)
@@ -74,8 +216,8 @@ class TriangleBoard(object):
             for arg in args:
                 if convert(arg) not in self.lines:
                     x = False
-            if x:
-                points += 1
+            if x: return 1
+            else: return 0
 
         # if line is horizontal
         if l[0] == l[2]:
@@ -84,20 +226,20 @@ class TriangleBoard(object):
             l_pos = [l[0], l[1], l[0]-1, l[1]+1]
             # negative slope exist
             if convert(l_neg) in self.lines:
-                exists([l[0]-1, l[1], l[0], l[1]])
+                points += exists([l[0]-1, l[1], l[0], l[1]])
             # positive slope exist
             elif convert(l_pos) in self.lines:
-                exists([l[2]-1, l[3], l[2], l[3]])
+                points += exists([l[2]-1, l[3], l[2], l[3]])
 
             # LOWER
             l_neg = [l[0], l[1], l[0]+1, l[1]+1]
             l_pos = [l[0]+1, l[1], l[2], l[3]]
             # negative slope exist
             if convert(l_neg) in self.lines:
-                exists([l[2], l[3], l[2]+1, l[3]])
+                points += exists([l[2], l[3], l[2]+1, l[3]])
             # positive slope exist
             elif convert(l_pos) in self.lines:
-                exists([l[0], l[1], l[0]+1, l[1]])
+                points += exists([l[0], l[1], l[0]+1, l[1]])
     
         # if line is vertical
         elif l[1] == l[3]:
@@ -106,20 +248,20 @@ class TriangleBoard(object):
             l_pos = [l[2], l[3]-1, l[0], l[1]]
             # negative slope exist
             if convert(l_neg) in self.lines:
-                exists([l[0], l[1]-1, l[0], l[1]])
+                points += exists([l[0], l[1]-1, l[0], l[1]])
             # positive slope exist
             elif convert(l_pos) in self.lines:
-                exists([l[2], l[3]-1, l[2], l[3]])
+                points += exists([l[2], l[3]-1, l[2], l[3]])
 
             # RIGHT
             l_neg = [l[0], l[1], l[2], l[3]+1]
             l_pos = [l[2], l[3], l[0], l[1]+1]   
             # negative slope exist
             if convert(l_neg) in self.lines:
-                exists([l[2], l[3], l[2], l[3]+1])
+                points += exists([l[2], l[3], l[2], l[3]+1])
             # positive slope exist    
             elif convert(l_pos) in self.lines:
-                exists([l[0], l[1], l[0], l[1]+1])
+                points += exists([l[0], l[1], l[0], l[1]+1])
 
         # Note that unlike the vertical and horizontal lines,
         # slopes can only have 2 possible triangles (look at matrix!)
@@ -129,102 +271,33 @@ class TriangleBoard(object):
             # TOP
             l_hor = [l[2], l[3]-1, l[2], l[3]]
             l_ver = [l[0]-1, l[1], l[0], l[1]]
-            exists(l_hor, l_ver)
+            points += exists(l_hor, l_ver)
             # BOTTOM
             l_hor = [l[0], l[1], l[0], l[1]+1]
             l_ver = [l[2], l[3], l[2]+1, l[3]]
-            exists(l_hor, l_ver)
+            points += exists(l_hor, l_ver)
 
         # if line is a negative slope \
         elif l[2]-l[0] > 0 and l[3]-l[1] > 0:
             # TOP
             l_hor = [l[0], l[1], l[0], l[1]+1]
             l_ver = [l[2]-1, l[3], l[2], l[3]]
-            exists(l_hor, l_ver)
+            points += exists(l_hor, l_ver)
             # BOTTOM
             l_hor = [l[2], l[3]-1, l[2], l[3]]
             l_ver = [l[0], l[1], l[0]+1, l[1]]
-            exists(l_hor, l_ver)
+            points += exists(l_hor, l_ver)
 
-        # ad the points
-        if points:
-            service.score += points
-            return '2'
-        else:
-            return '1'        
-        
+        # add the points
+        service.score += points
         # New line is added - success - update the gui
-        self.server.gui.sendAddLineResult(service, line)
+        self.server.gui.sendAddLineResult(SUCCESS, service, line)
 
-    def is_valid(self, line):
-        """ 
-        Returns True if the line is a valid line.
-        A line is not valid if it contains an index 
-        outside the matrix or it's horzontal or vertical
-        length is greater than 1 or both are 0
-
-        IMPORTANT! As a convention of the game, lines should be    
-        written from left to right and from up to down
-        e.g. 
-        VALID 
-            vertical lines: '0010', '1121', ...
-            horizontal lines: '0001', '1112', ...
-            positive slope: '1001', '1203', ...
-            negative slope: '0011', '1223', ...
-            
-        INVALID 
-            vertical lines: '1000', '2111', ...
-            horizontal lines: '0100', '1211', ...
-            positive slope: '0110', '0312', ...
-            negative slope: '1100', '2312', ...
-        """
-        if type(line) is str:
-            l = [int(i) for i in list(line)]
+        # return the result
+        if points:
+            return SUCCESS_NEW
         else:
-            l = line
-        m = self.matrix
-        try:
-            m[l[0]][l[1]]
-            m[l[2]][l[3]]
-        except IndexError:
-            return False
-        else:
-            length  = abs(l[2]-l[0]) > 1 or abs(l[3]-l[1]) > 1
-            point = l[2]-l[0] == 0 and l[3]-l[1] == 0
-            vertical = l[1] == l[3] and l[2]-l[0] < 0
-            horizontal = l[0] == l[2] and l[3]-l[1] < 0
-            slope_pos = l[2]-l[0] > 0 and l[3]-l[1] < 0
-            slope_neg = l[2]-l[0] < 0 and l[3]-l[1] < 0
-            if length or point or vertical or horizontal or\
-                slope_pos or slope_neg:
-                return False 
-            else:
-                return True
-
-    def overlaps(self, line):
-        """ returns True if the given line overlaps another """
-        if line in self.lines: return True
-
-        l = [int(i) for i in list(line)]
-
-        # line is a positive slope /
-        # remember that row index grows downwards
-        if l[2]-l[0] < 0:
-            for lin in self.lines:
-                x = [int(i) for i in list(lin)]
-                # if x is a negative slope and overlaps
-                if x[2]-x[0] > 0 and l[3] == x[3] and l[1] == x[1]:
-                    return True
-
-        # line is a negative slope \
-        else:
-            for lin in self.lines:
-                x = [int(i) for i in list(lin)]
-                # if x is a positive slope and overlaps
-                if x[2]-x[0] < 0 and l[3] == x[3] and l[1] == x[1]:
-                    return True
-
-        return False
+            return SUCCESS        
 
 class TriangleGUIManager(object):
     """ Handles communication with the GUI module written in JAVA """
@@ -233,9 +306,19 @@ class TriangleGUIManager(object):
         self.server = server
         self.sock = sock
 
-    def sendAddLineResult(self, service, line):
+    def end(self):
         """ 
-        sends player service id and score that drew the line 
+        Posts the final scores.
+        """
+        servs = self.server.services
+        self.sock.sendall('4'+','+str(servs[1].score)+','+\
+                            str(servs[2].score)+','+'\n')
+        
+
+    def sendAddLineResult(self, result, service, line):
+        """ 
+        sends result of line drawn, player service id
+        and score that drew the line 
         and the line itself separated by commas
         Notes:
             1. sendall does not block like recv does so sending 
@@ -245,7 +328,7 @@ class TriangleGUIManager(object):
                In the Java gui source, BufferedReader.readLine is used
         
         """
-        self.sock.sendall(str(service.sid)+','+\
+        self.sock.sendall(result+','+str(service.sid)+','+\
                         str(service.score)+','+line+'\n')
 
 class TriangleServer(Thread):
@@ -278,9 +361,10 @@ class TriangleServer(Thread):
                                 self.server_socket.accept()[0])
 
         print "Connect player 1 and 2."
-        while len(servs) < 3:
+        while len(servs) < 2:
             sock = self.server_socket.accept()[0]
-            service = TriangleServerService(tri, sock, len(servs)+1)
+            service = TriangleServerService(self, tri, sock, 
+                                        len(servs)+1)
             servs[service.sid] = service
             
         print "All set. Let the game begin."
@@ -294,18 +378,46 @@ class TriangleServer(Thread):
         # game is over - flag both clients
         if servs[1].score > servs[2].score: 
             winner, loser = 1, 2
-        else: 
+        elif servs[1].score < servs[2].score: 
             winner, loser = 2, 1
-    
-        for service in servs:
-            service.end(winner)
+        else: # tie
+            winner, loser = int(TIE), int(TIE)
 
-        print "%s won with score of %s." % (str(servs[winner]),
-                                            servs[winner].score)
-        print "%s lost with score of %s." % (str(servs[loser]),
-                                            servs[loser].score)
-        self.server_socket.close()  
+        self.end_game(winner, loser)  
+
+    def player_violation(self, sid):
+        """ 
+        Player with the given sid drew an invalid line.
+        Game is over. This player lost.
+        """
+        print "%s drew an invalid line and is disqualified." %\
+                     (str(self.services[sid]),)
+        loser = sid
+        if loser is 1: winner = 2
+        else: winner = 1
+        self.end_game(winner, loser)
         
+    def end_game(self, winner, loser):
+        """ 
+        Notifies the players that game is over and who won.
+        Prints the winner and loser and closes all connections
+        and finally exits 
+        """
+        self.gui.end()
+        for service in self.services.itervalues():
+            service.end(winner)        
+
+        if winner is not TIE:
+            print "%s won with score of %s." %\
+                    (self.services[winner],
+                         self.services[winner].score)
+            print "%s lost with score of %s." %\
+                    (self.services[loser], self.services[loser].score)
+        else:
+            print "It is a tie!"        
+
+        self.server_socket.close()
+        sys.exit(0)        
 
 class TriangleServerService(object):
     """
@@ -314,42 +426,60 @@ class TriangleServerService(object):
     next move, etc.
     """
     
-    def __init__(self, triangle, sock, sid):
+    def __init__(self, server, triangle, sock, sid):
         super(TriangleServerService, self).__init__()
+        self.server = server
         self.tri = triangle
         self.sock = sock
         self.sid = sid
         self.score = 0
+        self.in_service = True
 
     def __str__(self):
-        return 'Player %s' %s (str(self.sid),)
+        return 'Player %s' % (str(self.sid),)
 
     def start_turn(self):
         """ 
         Receive input from the client and sendall back the result.
 
-        First, sendall the start flag 3 to the client and all the 
+        First, sendall the start flag to the client and all the 
         lines drawn so far.
-
         Then, see TriangleBoard.add_line doc string.
+
+        IMPORTANT! 
+            1. need to append '\n' to all strings sent to clients
+            because in the BufferedReader.readLine in Java expects it
         """
-        while True:
-            self.sock.sendall('3'+self.tri.join_lines())
-            line = self.sock.recv(4)    
+        while self.in_service:
+            # delay before the next turn of the game
+            time.sleep(TURN_DELAY)
+
+            self.sock.sendall(START+self.tri.join_lines()+'\n')
+            # line length is 4 but it may be followed by
+            # '\r\n' or '\r' or '\n', an escape char is 1 byte
+            # so max len of result is 6
+            line = self.sock.recv(6) 
+            # strip line feed and carriage return if any
+            line = line.replace('\r', '').replace('\n', '')
+            
             result = self.tri.add_line(self, line)
-            self.sock.sendall(result+self.tri.join_lines())
-            if result is 1: break
+            if result is SUCCESS or\
+                not self.server.triangle.is_ongoing(): 
+                break
+            elif result is FAIL:
+                self.server.player_violation(self.sid)
 
     def end(self, wsid):
         """ 
         Tells the client that it is game over by sending the game over
-        flag 0, followed by a win or lose flag - 0:lose, 1:win
+        flag, followed by a win or lose flag - FAIL:lose, SUCCESS:win
         """
-        if wsid == self.sid: status = '1'
-        else: status = '0'
-        self.sock.sendall('0'+status)
-        self.sock.close()
-            
+        if wsid == self.sid: status = SUCCESS
+        elif wsid == int(TIE): status = TIE
+        else: status = FAIL
+        self.in_service = False
+        self.sock.sendall(END+status+'\n')
+        self.sock.close() 
 
 if __name__ == "__main__":
     server = TriangleServer()   

@@ -45,6 +45,12 @@ to subclass the given class and implement the AI.
     
     * If 1 or more triangles are formed by drawing the line, then the
        server flags the player to draw another line.
+    * If the line drawn is an invalid line then the player
+        automatically loses.
+ 
+        * An invalid line is a line that is already drawn, 
+            overlaps another line, or does not represent a line
+            in the matrix (IndexError or wrong format).
 
 **Note:** each student need only to implement the AI to determine the
 line to draw. For more specifics (like what object the client sends to

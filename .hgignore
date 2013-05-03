@@ -15,7 +15,6 @@ gwt-unitCache/
 **.xml
 **.log
 **.class
-**.jar
 **.zip
 **.classpath
 **.project
