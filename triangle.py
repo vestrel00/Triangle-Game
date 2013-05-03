@@ -68,54 +68,92 @@ class TriangleBoard(object):
         # check if the line creates a new triangle
         l = [int(i) for i in list(line)]
         points, convert = 0, self.ints_to_line
+
+        def exists(*args):
+            x = True
+            for arg in args:
+                if convert(arg) not in self.lines:
+                    x = False
+            if x:
+                points += 1
+
         # if line is horizontal
         if l[0] == l[2]:
             # UPPER
-            l_neg = [l[0]-1, l[1], l[0], l[1]+1]
+            l_neg = [l[0]-1, l[1], l[2], l[3]]
             l_pos = [l[0], l[1], l[0]-1, l[1]+1]
             # negative slope exist
             if convert(l_neg) in self.lines:
-                l0 = [l[0]-1, l[1], l[0], l[1]]
-                if convert(l0) in self.lines:
-                    points += 1
+                exists([l[0]-1, l[1], l[0], l[1]])
             # positive slope exist
             elif convert(l_pos) in self.lines:
-                l0 = [l[0]-1, l[1]+1, l[0], l[1]+1]
-                if convert(l0) in self.lines:
-                    points += 1
+                exists([l[2]-1, l[3], l[2], l[3]])
 
             # LOWER
             l_neg = [l[0], l[1], l[0]+1, l[1]+1]
-            l_pos = [l[0]+1, l[1], l[0], l[1]+1]
+            l_pos = [l[0]+1, l[1], l[2], l[3]]
             # negative slope exist
             if convert(l_neg) in self.lines:
-                l0 = [l[0], l[1], l[0]+1, l[1]]
-                if convert(l0) in self.lines:
-                    points += 1
+                exists([l[2], l[3], l[2]+1, l[3]])
             # positive slope exist
             elif convert(l_pos) in self.lines:
-                l0 = [l[0], l[1]+1, l[0]+1, l[1]+1]
-                if convert(l0) in self.lines:
-                    points += 1
+                exists([l[0], l[1], l[0]+1, l[1]])
     
         # if line is vertical
         elif l[1] == l[3]:
-            pass # TODO
-       
+            # LEFT
+            l_neg = [l[0], l[1]-1, l[2], l[3]]
+            l_pos = [l[2], l[3]-1, l[0], l[1]]
+            # negative slope exist
+            if convert(l_neg) in self.lines:
+                exists([l[0], l[1]-1, l[0], l[1]])
+            # positive slope exist
+            elif convert(l_pos) in self.lines:
+                exists([l[2], l[3]-1, l[2], l[3]])
+
+            # RIGHT
+            l_neg = [l[0], l[1], l[2], l[3]+1]
+            l_pos = [l[2], l[3], l[0], l[1]+1]   
+            # negative slope exist
+            if convert(l_neg) in self.lines:
+                exists([l[2], l[3], l[2], l[3]+1])
+            # positive slope exist    
+            elif convert(l_pos) in self.lines:
+                exists([l[0], l[1], l[0], l[1]+1])
+
+        # Note that unlike the vertical and horizontal lines,
+        # slopes can only have 2 possible triangles (look at matrix!)
+
         # if line is a positive slope /
         elif l[2]-l[0] < 0 and l[3]-l[1] > 0:
-            pass #TODO
+            # TOP
+            l_hor = [l[2], l[3]-1, l[2], l[3]]
+            l_ver = [l[0]-1, l[1], l[0], l[1]]
+            exists(l_hor, l_ver)
+            # BOTTOM
+            l_hor = [l[0], l[1], l[0], l[1]+1]
+            l_ver = [l[2], l[3], l[2]+1, l[3]]
+            exists(l_hor, l_ver)
 
         # if line is a negative slope \
         elif l[2]-l[0] > 0 and l[3]-l[1] > 0:
-            pass #TODO
+            # TOP
+            l_hor = [l[0], l[1], l[0], l[1]+1]
+            l_ver = [l[2]-1, l[3], l[2], l[3]]
+            exists(l_hor, l_ver)
+            # BOTTOM
+            l_hor = [l[2], l[3]-1, l[2], l[3]]
+            l_ver = [l[0], l[1], l[0]+1, l[1]]
+            exists(l_hor, l_ver)
 
+        # ad the points
         if points:
             service.score += points
             return '2'
         else:
             return '1'        
         
+        # New line is added - success - update the gui
         self.server.gui.sendAddLineResult(service, line)
 
     def is_valid(self, line):
@@ -202,6 +240,7 @@ class TriangleGUIManager(object):
         Notes:
             1. sendall does not block like recv does so sending 
                 in the same thread as main will not block the game!
+                We may want to block for safety...
             2. need to append '\n' to strings being sent to Java code.
                In the Java gui source, BufferedReader.readLine is used
         
