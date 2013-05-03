@@ -141,9 +141,9 @@ public class Triangle implements ApplicationListener {
 		}
 
 		public void drawLines(ShapeRenderer shape) {
-			// do not use abstract iterators since it may allocate new pace in
-			// the heap
+			// abstract iterators may allocate new space in the heap
 			// e.g. for (Line line:lines)
+			shape.setColor(color);
 			for (int i = 0; i < lines.size(); i++)
 				lines.get(i).draw(shape);
 		}
@@ -157,21 +157,30 @@ public class Triangle implements ApplicationListener {
 			return builder;
 		}
 
+		public void update(String score, String line) {
+			this.score = Integer.valueOf(score);
+			this.lines.add(new Line(line));
+			Gdx.graphics.requestRendering();
+		}
+
 	}
 
 	private class Line {
 		private int x1, y1, x2, y2;
-		private Color color;
 
-		public Line(Color color, int x1, int y1, int x2, int y2) {
-			this.color = color;
-			this.x1 = x1 * DIST_MULTIPLIER;
-			this.y1 = y1 * DIST_MULTIPLIER;
-			this.x2 = x2 * DIST_MULTIPLIER;
-			this.y2 = y2 * DIST_MULTIPLIER;
+		public Line(String line) {
+			x1 = Integer.valueOf(String.valueOf(line.charAt(0)))
+					* DIST_MULTIPLIER;
+			y1 = Integer.valueOf(String.valueOf(line.charAt(1)))
+					* DIST_MULTIPLIER;
+			x2 = Integer.valueOf(String.valueOf(line.charAt(2)))
+					* DIST_MULTIPLIER;
+			y2 = Integer.valueOf(String.valueOf(line.charAt(3)))
+					* DIST_MULTIPLIER;
 		}
 
 		public void draw(ShapeRenderer shape) {
+			System.out.println(x1 + ", " + y1 + ", " + x2 + ", " + y2);
 			shape.line(x1, y1, x2, y2);
 		}
 	}
@@ -197,13 +206,16 @@ public class Triangle implements ApplicationListener {
 			while (isRunning) {
 				try {
 					// see TriangleGUIManager.sendAddLineResult in triangle.py
-					// for the data format
+					// for the data format : playerId, playerScore, lineDrawn
 					String data;
+					String[] list = new String[3];
 					if ((data = in.readLine()) == null)
 						break;
-					System.out.println(data);
-					// TODO parse the data and update the game variables and
-					// re-draw
+					list = data.split(",");
+					if (list[0].contentEquals("1"))
+						player1.update(list[1], list[2]);
+					else
+						player2.update(list[1], list[2]);
 				} catch (IOException e) {
 					e.printStackTrace();
 				}

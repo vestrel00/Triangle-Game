@@ -236,7 +236,7 @@ class TriangleGUIManager(object):
     def sendAddLineResult(self, service, line):
         """ 
         sends player service id and score that drew the line 
-        and the line itself
+        and the line itself separated by commas
         Notes:
             1. sendall does not block like recv does so sending 
                 in the same thread as main will not block the game!
@@ -245,8 +245,8 @@ class TriangleGUIManager(object):
                In the Java gui source, BufferedReader.readLine is used
         
         """
-        self.sock.sendall(str(service.sid)+\
-                        str(service.score)+line+'\n')
+        self.sock.sendall(str(service.sid)+','+\
+                        str(service.score)+','+line+'\n')
 
 class TriangleServer(Thread):
     """
@@ -328,13 +328,13 @@ class TriangleServerService(object):
         """ 
         Receive input from the client and sendall back the result.
 
-        First, sendall the start flag 1 to the client and all the 
+        First, sendall the start flag 3 to the client and all the 
         lines drawn so far.
 
         Then, see TriangleBoard.add_line doc string.
         """
         while True:
-            self.sock.sendall('1'+self.tri.join_lines())
+            self.sock.sendall('3'+self.tri.join_lines())
             line = self.sock.recv(4)    
             result = self.tri.add_line(self, line)
             self.sock.sendall(result+self.tri.join_lines())
