@@ -208,10 +208,10 @@ class TriangleServer(Thread):
     """
     Accepts 3 connections.
     The first connection must be the GUI.
-    For each connection that is accepted, a new thread is launched
+    For each connection that is accepted, a new thread is launched.
 
-    Once both clients have connected, the game begins.
-    The first socket to connect will get to have the first turn.
+    Once both players have connected, the game begins.
+    The first player to connect will get to have the first turn.
     """
 
     def __init__(self, host='localhost', port=8000):

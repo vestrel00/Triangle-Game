@@ -5,14 +5,18 @@ libs/
 assets/
 gen/
 war/
+Triangle-android/
 gwt-unitCache/
 .meta/
 .metadata/
 .settings/
 .gwt/
 
+**.xml
 **.log
 **.class
+**.jar
+**.zip
 **.classpath
 **.project
 **.pyc
