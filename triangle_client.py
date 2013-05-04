@@ -70,7 +70,7 @@ class TriangleClient(object):
                 lines_int = []
                 
                 # lines_str is initially [''] which is not None!
-                # so prevent lines_int to be [ [] ] - which is None 2!
+                # so prevent lines_int to be [[]] - also not None!
                 if lines_str[0]:
                     for line in lines_str:
                         lines_int.append([int(i) for i in list(line)])
