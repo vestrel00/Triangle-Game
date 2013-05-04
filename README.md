@@ -30,10 +30,10 @@ Each student need only to implement the AI to determine the
 line to draw. The following are the same interface written in diffrent
 languages that can be subclassed and implemented. 
 
-1. player_ex.py
-2. player_ex.c *TODO*
-3. player_ex.cpp *TODO*
-4. player_ex.java *TODO*
+1. triangle_client.py
+2. triangle_client.c *TODO*
+3. triangle_client.cpp *TODO*
+4. triangle_client.java *TODO*
 
 # The triangle game's mechanics
 
