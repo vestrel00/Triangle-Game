@@ -24,6 +24,17 @@ to subclass the given class and implement the AI.
     6. open another shell/terminal
     7. ```python player_ex.py```
 
+
+# Implement the client interface AI
+Each student need only to implement the AI to determine the
+line to draw. The following are the same interface written in diffrent
+languages that can be subclassed and implemented. 
+
+1. player_ex.py
+2. player_ex.c *TODO*
+3. player_ex.cpp *TODO*
+4. player_ex.java *TODO*
+
 # The triangle game's mechanics
 
 1. There is a 4 by 4 matrix in the form of a 2d list/array with the
@@ -61,10 +72,6 @@ to subclass the given class and implement the AI.
     coordinate to the server.
 5. Server sends client the result of drawing the line.
 
-**Note:** each student need only to implement the AI to determine the
-line to draw. For more specifics (like what object the client sends to
-the server) see the base code to be subclassed. Documentation and
-examples are provided.
 
 # Code License : WTFPL
 Do what ever you want with the code - [WTFPL](http://www.wtfpl.net/)
