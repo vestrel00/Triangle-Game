@@ -23,8 +23,8 @@ START = '3'
 END = '4'
 TIE = '5'
 
-# this only exist to detect IndexError s
-MATRIX = [ [0 for i in range(4)] for i in range(4) ]
+# matrix dimension
+MATRIX_D = (4, 4)
 
 def line_is_valid(line):
     """ 
@@ -57,24 +57,24 @@ def line_is_valid(line):
     else:
         l = line
 
-    m = MATRIX
-    try:
-        m[l[0]][l[1]]
-        m[l[2]][l[3]]
-    except IndexError:
+    # validate index
+    for n in l:
+        if n < 0: return False
+    if l[0] > MATRIX_D[0]-1 or l[2] > MATRIX_D[0]-1 or\
+        l[1] > MATRIX_D[1]-1 or l[3] > MATRIX_D[1]-1:
         return False
+
+    length  = abs(l[2]-l[0]) > 1 or abs(l[3]-l[1]) > 1
+    point = l[2]-l[0] == 0 and l[3]-l[1] == 0
+    vertical = l[1] == l[3] and l[2]-l[0] < 0
+    horizontal = l[0] == l[2] and l[3]-l[1] < 0
+    slope_pos = l[2]-l[0] > 0 and l[3]-l[1] < 0
+    slope_neg = l[2]-l[0] < 0 and l[3]-l[1] < 0
+    if length or point or vertical or horizontal or\
+        slope_pos or slope_neg:
+        return False 
     else:
-        length  = abs(l[2]-l[0]) > 1 or abs(l[3]-l[1]) > 1
-        point = l[2]-l[0] == 0 and l[3]-l[1] == 0
-        vertical = l[1] == l[3] and l[2]-l[0] < 0
-        horizontal = l[0] == l[2] and l[3]-l[1] < 0
-        slope_pos = l[2]-l[0] > 0 and l[3]-l[1] < 0
-        slope_neg = l[2]-l[0] < 0 and l[3]-l[1] < 0
-        if length or point or vertical or horizontal or\
-            slope_pos or slope_neg:
-            return False 
-        else:
-            return True
+        return True
 
 def line_overlaps(line, lines):
     """ 
