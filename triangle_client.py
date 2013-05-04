@@ -9,15 +9,8 @@ Written by Vandolf Estrelado
 """
 
 import socket, sys
-from triangle import line_overlaps, line_is_valid
-
-# IMPORTANT! Server must have the same values!
-# status codes/flags used to communicate with the server
-FAIL = '0'
-SUCCESS = '1'
-SUCCESS_NEW = '2'
-START = '3'
-END = '4'
+from triangle import line_overlaps, line_is_valid,\
+FAIL, SUCCESS, SUCCESS_NEW, START, END
 
 class TriangleClient(object):
     """ client for the triangle server """
