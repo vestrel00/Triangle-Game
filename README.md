@@ -44,6 +44,12 @@ to subclass the given class and implement the AI.
     * If a triangle is formed, then the player who formed the 
         triangle(s) gets another turn.
     * Player with most points win.
+    * If the line drawn is an invalid line then the player
+        automatically loses.
+ 
+        * An invalid line is a line that is already drawn, 
+            overlaps another line, or does not represent a line
+            in the matrix (IndexError or wrong format).
 
 # Client and server communication
 
@@ -54,15 +60,6 @@ to subclass the given class and implement the AI.
 4. Player's AI determines the best line to draw next and sends this
     coordinate to the server.
 5. Server sends client the result of drawing the line.
-    
-    * If 1 or more triangles are formed by drawing the line, then the
-       server flags the player to draw another line.
-    * If the line drawn is an invalid line then the player
-        automatically loses.
- 
-        * An invalid line is a line that is already drawn, 
-            overlaps another line, or does not represent a line
-            in the matrix (IndexError or wrong format).
 
 **Note:** each student need only to implement the AI to determine the
 line to draw. For more specifics (like what object the client sends to
