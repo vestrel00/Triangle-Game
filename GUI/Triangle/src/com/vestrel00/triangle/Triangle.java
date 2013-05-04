@@ -253,7 +253,8 @@ public class Triangle implements ApplicationListener {
 							player1.end("tie", String.valueOf(p1Score));
 							player2.end("tie", String.valueOf(p2Score));
 						}
-
+						isRunning = false;
+						break;
 					}
 				} catch (IOException e) {
 					e.printStackTrace();
