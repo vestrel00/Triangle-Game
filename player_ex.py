@@ -45,11 +45,9 @@ class MyTriangleClient(TriangleClient):
 
             if not line_overlaps(my_line, lines) and\
                 line_is_valid(my_line):
-                return my_line
-            else:
                 # fix it. It should never go here if you know what you
                 # are doing.
-            
+            return my_line
 
         1) Use line_is_valid(line) to check if the line follows 
         the convention below.
