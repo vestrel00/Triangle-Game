@@ -3,7 +3,7 @@
 
 """
 An example triangle AI.
-This AI simply picks a random line from all the posible set of lines.
+This AI simply picks a random line from all the possible set of lines.
 The AI must be replaced!
 
 Homework for AI 2013

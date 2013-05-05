@@ -55,8 +55,10 @@ languages that can be subclassed and implemented.
     * If a triangle is formed, then the player who formed the 
         triangle(s) gets another turn.
     * Player with most points win.
+    * If the payer fails to respond within 10 seconds, or crashes,
+        then the player is disqualified.
     * If the line drawn is an invalid line then the player
-        automatically loses.
+        is automatically disqualified.
  
         * An invalid line is a line that is already drawn, 
             overlaps another line, or does not represent a line
