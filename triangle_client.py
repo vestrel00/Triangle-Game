@@ -21,6 +21,27 @@ class TriangleClient(object):
         self.sock = socket.socket(*config)
         self.sock.connect( (host, port) )
         self.is_playing = True
+        self.all_possible_valid_lines = [
+            # all horizontal lines
+            [0,0, 0,1], [0,1, 0,2], [0,2, 0,3], [1,0, 1,1],
+            [1,1, 1,2], [1,2, 1,3], [2,0, 2,1], [2,1, 2,2],
+            [2,2, 2,3], [3,0, 3,1], [3,1, 3,2], [3,2, 3,3],
+
+            # all vertical lines
+            [0,0, 1,0], [0,1, 1,1], [0,2, 1,2], [0,3, 1,3],
+            [1,0, 2,0], [1,1, 2,1], [1,2, 2,2], [1,3, 2,3],
+            [2,0, 3,0], [2,1, 3,1], [2,2, 3,2], [2,3, 3,3],
+
+            # all positive slopes
+            [1,0, 0,1], [1,1, 0,2], [1,2, 0,3], [2,0, 1,1],
+            [2,1, 1,2], [2,2, 1,3], [3,0, 2,1], [3,1, 2,2],
+            [3,2, 2,3], 
+
+            # all negative slopes
+            [0,0, 1,1], [0,1, 1,2], [0,2, 1,3], [1,0, 2,1],
+            [1,1, 2,2], [1,2, 2,3], [2,0, 3,1], [2,1, 3,2],
+            [2,2, 3,3],
+        ]
         
     def end(self, status):
         """ 
@@ -100,14 +121,38 @@ class TriangleClient(object):
             this contains 3 lines that forms a triangle 
 
         * Note that lines can be an empty list []
+        * There are 42 possible lines, 33 of which will be used
+            in a single game (discounting the overlapping lines)
+        
+        all_possible_valid_lines = [
+            # all horizontal lines
+            [0,0, 0,1], [0,1, 0,2], [0,2, 0,3], [1,0, 1,1],
+            [1,1, 1,2], [1,2, 1,3], [2,0, 2,1], [2,1, 2,2],
+            [2,2, 2,3], [3,0, 3,1], [3,1, 3,2], [3,2, 3,3],
+
+            # all vertical lines
+            [0,0, 1,0], [0,1, 1,1], [0,2, 1,2], [0,3, 1,3],
+            [1,0, 2,0], [1,1, 2,1], [1,2, 2,2], [1,3, 2,3],
+            [2,0, 3,0], [2,1, 3,1], [2,2, 3,2], [2,3, 3,3],
+
+            # all positive slopes
+            [1,0, 0,1], [1,1, 0,2], [1,2, 0,3], [2,0, 1,1],
+            [2,1, 1,2], [2,2, 1,3], [3,0, 2,1], [3,1, 2,2],
+            [3,2, 2,3], 
+
+            # all negative slopes
+            [0,0, 1,1], [0,1, 1,2], [0,2, 1,3], [1,0, 2,1],
+            [1,1, 2,2], [1,2, 2,3], [2,0, 3,1], [2,1, 3,2],
+            [2,2, 3,3],
+        ]
 
         ** This method needs to return a valid, non-overlapping 
             line or you lose. So, you should definitely check the
             validity of the line first before returning it to avoid
             disqualification. Do this by:
 
-            if line_overlaps(my_line, lines) and\
-                not line_is_valid(my_line):
+            if not line_overlaps(my_line, lines) and\
+                line_is_valid(my_line):
                 # fix it. It should never go here if you know what you
                 # are doing.
             return my_line

@@ -10,6 +10,8 @@ Homework for AI 2013
 Written by Vandolf Estrellado
 """
 
+from random import randint
+
 from triangle_client import TriangleClient
 from triangle import line_overlaps, line_is_valid
 
@@ -40,6 +42,28 @@ class MyTriangleClient(TriangleClient):
         * Note that lines can be an empty list []
         * There are 42 possible lines, 33 of which will be used
             in a single game (discounting the overlapping lines)
+        
+        all_possible_valid_lines = [
+            # all horizontal lines
+            [0,0, 0,1], [0,1, 0,2], [0,2, 0,3], [1,0, 1,1],
+            [1,1, 1,2], [1,2, 1,3], [2,0, 2,1], [2,1, 2,2],
+            [2,2, 2,3], [3,0, 3,1], [3,1, 3,2], [3,2, 3,3],
+
+            # all vertical lines
+            [0,0, 1,0], [0,1, 1,1], [0,2, 1,2], [0,3, 1,3],
+            [1,0, 2,0], [1,1, 2,1], [1,2, 2,2], [1,3, 2,3],
+            [2,0, 3,0], [2,1, 3,1], [2,2, 3,2], [2,3, 3,3],
+
+            # all positive slopes
+            [1,0, 0,1], [1,1, 0,2], [1,2, 0,3], [2,0, 1,1],
+            [2,1, 1,2], [2,2, 1,3], [3,0, 2,1], [3,1, 2,2],
+            [3,2, 2,3], 
+
+            # all negative slopes
+            [0,0, 1,1], [0,1, 1,2], [0,2, 1,3], [1,0, 2,1],
+            [1,1, 2,2], [1,2, 2,3], [2,0, 3,1], [2,1, 3,2],
+            [2,2, 3,3],
+        ]
 
         ** This method needs to return a valid, non-overlapping 
             line or you lose. So, you should definitely check the
@@ -73,38 +97,6 @@ class MyTriangleClient(TriangleClient):
         2) Use line_overlaps(line, lines) to check if line is already
             drawn (already in lines) and if it overlaps another line.
         """
-        if 'randint' not in dir():
-            from random import randint
-
-        # note that a good algorithm will not store 
-        # all possible lines in memory but instead determine
-        # the viability of the next line to draw from the 
-        # current lines
-        # note that I know how to generate all the lines
-        # but I hardcoded it here instead for readability
-        if not hasattr(self, 'all_possible_valid_lines'):
-            self.all_possible_valid_lines = [
-                # all horizontal lines
-                [0,0, 0,1], [0,1, 0,2], [0,2, 0,3], [1,0, 1,1],
-                [1,1, 1,2], [1,2, 1,3], [2,0, 2,1], [2,1, 2,2],
-                [2,2, 2,3], [3,0, 3,1], [3,1, 3,2], [3,2, 3,3],
-
-                # all vertical lines
-                [0,0, 1,0], [0,1, 1,1], [0,2, 1,2], [0,3, 1,3],
-                [1,0, 2,0], [1,1, 2,1], [1,2, 2,2], [1,3, 2,3],
-                [2,0, 3,0], [2,1, 3,1], [2,2, 3,2], [2,3, 3,3],
-
-                # all positive slopes
-                [1,0, 0,1], [1,1, 0,2], [1,2, 0,3], [2,0, 1,1],
-                [2,1, 1,2], [2,2, 1,3], [3,0, 2,1], [3,1, 2,2],
-                [3,2, 2,3], 
-
-                # all negative slopes
-                [0,0, 1,1], [0,1, 1,2], [0,2, 1,3], [1,0, 2,1],
-                [1,1, 2,2], [1,2, 2,3], [2,0, 3,1], [2,1, 3,2],
-                [2,2, 3,3],
-            ]
-
         all_lines = self.all_possible_valid_lines
         
         # choose a random line

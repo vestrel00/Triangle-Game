@@ -23,7 +23,7 @@ START = '3'
 END = '4'
 TIE = '5'
 
-# board dimension
+# board dimension - CHANGING THIS WILL BREAK THE GAME
 BOARD_D = (4, 4)
 
 def line_is_valid(line):
