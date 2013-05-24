@@ -79,18 +79,22 @@ class TriangleClient(object):
 
     def drawLine(self, lines):
         """ 
+        This is called when it's this player's turn to draw a line.
         This is the method to implement by the student.
         This method provides the lines that are currently drawn
-        in the matrix.
+        in the game board. 
 
         Each line in lines is a list of ints in this format:
-        [x1, y1, x2, y2]
-        The above cartesian coordinates correspond to the matrix:
-        The matrix is a 4by4 2d list containing useless integers
-        [ [(0,0), (0,1), (0,2), (0,3)],
-          [(1,0), (1,1), (1,2), (1,3)],
-          [(2,0), (2,1), (2,2), (2,3)],
-          [(3,0), (3,1), (3,2), (3,3)] ]
+        [m1, n1, m2, n2]
+        The above cartesian coordinates correspond to the game board:
+        The gameboard is an imaginary object that has 
+        the following layout:
+        --------------------------> m
+        | (0,0) (0,1) (0,2) (0,3)   
+        | (1,0) (1,1) (1,2) (1,3)   
+        | (2,0) (2,1) (2,2) (2,3)   
+        | (3,0) (3,1) (3,2) (3,3)   
+        n (grows downwards)
 
         e.g. lines = [ [0,0, 0,1], [1,0, 0,1], [0,0, 1,0], ]
             this contains 3 lines that forms a triangle 

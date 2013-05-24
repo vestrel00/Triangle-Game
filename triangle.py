@@ -23,8 +23,8 @@ START = '3'
 END = '4'
 TIE = '5'
 
-# matrix dimension
-MATRIX_D = (4, 4)
+# board dimension
+BOARD_D = (4, 4)
 
 def line_is_valid(line):
     """ 
@@ -34,7 +34,7 @@ def line_is_valid(line):
     understand what the form of a valid line is.
 
     A line is not valid if it contains an index 
-    outside the matrix or it's horzontal or vertical
+    outside the board or it's horzontal or vertical
     length is greater than 1 or both are 0
 
     IMPORTANT! As a convention of the game, lines should be    
@@ -60,8 +60,8 @@ def line_is_valid(line):
     # validate index
     for n in l:
         if n < 0: return False
-    if l[0] > MATRIX_D[0]-1 or l[2] > MATRIX_D[0]-1 or\
-        l[1] > MATRIX_D[1]-1 or l[3] > MATRIX_D[1]-1:
+    if l[0] > BOARD_D[0]-1 or l[2] > BOARD_D[0]-1 or\
+        l[1] > BOARD_D[1]-1 or l[3] > BOARD_D[1]-1:
         return False
 
     length  = abs(l[2]-l[0]) > 1 or abs(l[3]-l[1]) > 1
@@ -126,13 +126,15 @@ def line_overlaps(line, lines):
 
 class TriangleBoard(object):
     """ 
-    Contains the game components such as the current matrix 
+    Contains the game components such as the current board 
 
-    The matrix is a 4by4 2d list of zeros
-    [ [(0,0), (0,1), (0,2), (0,3)],
-      [(1,0), (1,1), (1,2), (1,3)],
-      [(2,0), (2,1), (2,2), (2,3)],
-      [(3,0), (3,1), (3,2), (3,3)] ]
+    The gameboard is an imaginary object that has the following layout
+    --------------------------> m
+    | (0,0) (0,1) (0,2) (0,3)   
+    | (1,0) (1,1) (1,2) (1,3)   
+    | (2,0) (2,1) (2,2) (2,3)   
+    | (3,0) (3,1) (3,2) (3,3)   
+    n (grows downwards)
 
     There are 42 possible lines (some slopes overlap):
     all_possible_valid_lines = [
@@ -185,8 +187,8 @@ class TriangleBoard(object):
     def add_line(self, service, line):
         """
         The input is a string containing 4 numbers corresponding to
-        the x1,y1 x2,y2 coordinates in the server's triangle's matrix.
-            - this attempts to create a line in the matrix.
+        the x1,y1 x2,y2 coordinates in the server's triangle board.
+            - this attempts to create a line in the board.
 
         The result is a string containing the status character 
         followed by the all the lines drawn so far.
@@ -264,7 +266,7 @@ class TriangleBoard(object):
                 points += exists([l[0], l[1], l[0], l[1]+1])
 
         # Note that unlike the vertical and horizontal lines,
-        # slopes can only have 2 possible triangles (look at matrix!)
+        # slopes can only have 2 possible triangles (look at board!)
 
         # if line is a positive slope /
         elif l[2]-l[0] < 0 and l[3]-l[1] > 0:
@@ -422,8 +424,7 @@ class TriangleServer(Thread):
 class TriangleServerService(object):
     """
     A dedicated listener for a client in the TriangleServer.
-    Accepts client requests including getting the matrix, sendind the
-    next move, etc.
+    Waits for the line the client gives and draws it on the board.
     """
     
     def __init__(self, server, triangle, sock, sid):
