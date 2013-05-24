@@ -37,17 +37,18 @@ languages that can be subclassed and implemented.
 
 # The triangle game's mechanics
 
-1. There is a 4 by 4 matrix in the form of a 2d list/array with the
-    following indices containing an arbitrary value of zeros.
-
-    [ [(0,0), (0,1), (0,2), (0,3)],  
-      [(1,0), (1,1), (1,2), (1,3)],   
-      [(2,0), (2,1), (2,2), (2,3)],  
-      [(3,0), (3,1), (3,2), (3,3)] ]  
+1. The gameboard is an imaginary object that has the following layout:
+      
+    --------------------------> m   
+    | (0,0) (0,1) (0,2) (0,3)   
+    | (1,0) (1,1) (1,2) (1,3)   
+    | (2,0) (2,1) (2,2) (2,3)   
+    | (3,0) (3,1) (3,2) (3,3)   
+    n (grows downwards)
 
 2. Two players are required to play.
 3. Each player is a program written in any language.
-4. Each player takes turns 'drawing' a line in the matrix.
+4. Each player takes turns 'drawing' a line in the game board.
 5. There can be no duplicate or overlapping lines.
 6. If a player draws a valid line and 1 or more triangle is formed
     then the player receives 1 point for each triangle formed.
@@ -62,7 +63,7 @@ languages that can be subclassed and implemented.
  
         * An invalid line is a line that is already drawn, 
             overlaps another line, or does not represent a line
-            in the matrix (IndexError or wrong format).
+            in the game board (or wrong format).
 
 # Client and server communication
 
