@@ -53,7 +53,7 @@ def line_is_valid(line):
         negative slope: '1100', '2312', ...
     """
     if type(line) is str:
-        l = [int(i) for i in list(line)]
+        l = [int(c) for c in list(line)]
     else:
         l = line
 
@@ -79,48 +79,22 @@ def line_is_valid(line):
 def line_overlaps(line, lines):
     """ 
     returns True if the given line overlaps another.
-    lines is a list of strings or ints: ['0010', ...] or [[0,0,1,0],]
-    line can be a str or a list of ints: '0010' or [0,0,1,0]
-
-    Usually, lines and line are both either composed of str or int!
+    lines is a list of list of ints: [[0,0,1,0],]
+    line is a list of ints: [0,0,1,0]
     """
     if not lines: return False;
+    if line in lines: return True
 
-    assert type(line) == type(lines[0]) and\
-            type(line[0]) == type(lines[0][0])
-
-    if type(line) is str:
-        if line in lines: return True
-        l = [int(i) for i in list(line)]
-    else:
-        if line in lines: return True
-        l = line
-
-    
     # line is a positive slope /
-    # remember that row index grows downwards
-    if l[2]-l[0] < 0:
-        for lin in lines:
-            if type(lin) is str:
-                x = [int(i) for i in list(lin)]
-            else:
-                x = lin
-            # if x is a negative slope and line_overlaps
-            if x[2]-x[0] > 0:
-                if l[3] == x[3] and l[1] == x[1]:
-                    return True
-
+    # check for the intersecting negative slope
+    if line[2]-line[0] < 0 and\
+        [line[0]-1, line[1], line[2]+1, line[3]] in lines:
+        return True
     # line is a negative slope \
-    elif l[2]-l[0] > 0:
-        for lin in lines:
-            if type(lin) is str:
-                x = [int(i) for i in list(lin)]
-            else:
-                x = lin
-            # if x is a positive slope and overlaps
-            if x[2]-x[0] < 0:
-                if l[3] == x[3] and l[1] == x[1]:
-                    return True
+    # check for the intersecting positive slope
+    elif line[2]-line[0] > 0 and\
+        [line[0]+1, line[1], line[2]-1, line[3]] in lines:
+        return True
 
     return False
 
@@ -175,19 +149,16 @@ class TriangleBoard(object):
         """ 
         return the lines as a joined string separated by commas.
         e.g.
-        ['0011', '0001'] 
+        [[0,0,1,1], [0,0,0,1]] 
         returns '0011,0001,'
         """
-        return ','.join(self.lines)
-
-    def ints_to_line(self, ints):
-        """ return a list of ints and join them to a string """
-        return ''.join([str(i) for i in ints])
+        return ','.join([''.join([str(i) for i in lst])\
+                            for lst in self.lines])
 
     def add_line(self, service, line):
         """
-        The input is a string containing 4 numbers corresponding to
-        the x1,y1 x2,y2 coordinates in the server's triangle board.
+        The input is a list containing 4 integers corresponding to
+        the [x1,y1 x2,y2] coordinates in the server's triangle board.
             - this attempts to create a line in the board.
 
         The result is a string containing the status character 
@@ -211,12 +182,12 @@ class TriangleBoard(object):
 
         # check if the line creates a new triangle
         l = [int(i) for i in list(line)]
-        points, convert = 0, self.ints_to_line
+        points = 0
 
         def exists(*args):
             x = True
             for arg in args:
-                if convert(arg) not in self.lines:
+                if arg not in self.lines:
                     x = False
             if x: return 1
             else: return 0
@@ -227,20 +198,20 @@ class TriangleBoard(object):
             l_neg = [l[0]-1, l[1], l[2], l[3]]
             l_pos = [l[0], l[1], l[0]-1, l[1]+1]
             # negative slope exist
-            if convert(l_neg) in self.lines:
+            if l_neg in self.lines:
                 points += exists([l[0]-1, l[1], l[0], l[1]])
             # positive slope exist
-            elif convert(l_pos) in self.lines:
+            elif l_pos in self.lines:
                 points += exists([l[2]-1, l[3], l[2], l[3]])
 
             # LOWER
             l_neg = [l[0], l[1], l[0]+1, l[1]+1]
             l_pos = [l[0]+1, l[1], l[2], l[3]]
             # negative slope exist
-            if convert(l_neg) in self.lines:
+            if l_neg in self.lines:
                 points += exists([l[2], l[3], l[2]+1, l[3]])
             # positive slope exist
-            elif convert(l_pos) in self.lines:
+            elif l_pos in self.lines:
                 points += exists([l[0], l[1], l[0]+1, l[1]])
     
         # if line is vertical
@@ -249,20 +220,20 @@ class TriangleBoard(object):
             l_neg = [l[0], l[1]-1, l[2], l[3]]
             l_pos = [l[2], l[3]-1, l[0], l[1]]
             # negative slope exist
-            if convert(l_neg) in self.lines:
+            if l_neg in self.lines:
                 points += exists([l[0], l[1]-1, l[0], l[1]])
             # positive slope exist
-            elif convert(l_pos) in self.lines:
+            elif l_pos in self.lines:
                 points += exists([l[2], l[3]-1, l[2], l[3]])
 
             # RIGHT
             l_neg = [l[0], l[1], l[2], l[3]+1]
             l_pos = [l[2], l[3], l[0], l[1]+1]   
             # negative slope exist
-            if convert(l_neg) in self.lines:
+            if l_neg in self.lines:
                 points += exists([l[2], l[3], l[2], l[3]+1])
             # positive slope exist    
-            elif convert(l_pos) in self.lines:
+            elif l_pos in self.lines:
                 points += exists([l[0], l[1], l[0], l[1]+1])
 
         # Note that unlike the vertical and horizontal lines,
@@ -330,6 +301,7 @@ class TriangleGUIManager(object):
                In the Java gui source, BufferedReader.readLine is used
         
         """
+        line = ''.join([str(c) for c in line])
         self.sock.sendall(result+','+str(service.sid)+','+\
                         str(service.score)+','+line+'\n')
 
@@ -463,7 +435,8 @@ class TriangleServerService(object):
             # strip line feed and carriage return if any
             line = line.replace('\r', '').replace('\n', '')
             
-            result = self.tri.add_line(self, line)
+            result = self.tri.add_line(self, 
+                        [int(c) for c in list(line)])
             if result is SUCCESS or\
                 not self.server.triangle.is_ongoing(): 
                 break
