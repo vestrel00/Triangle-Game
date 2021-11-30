@@ -78,4 +78,3 @@ languages that can be subclassed and implemented.
 
 # Code License : WTFPL
 Do what ever you want with the code - [WTFPL](http://www.wtfpl.net/)
-
